@@ -131,8 +131,12 @@ log "⬆️ Uploading files..."
 
 upload_failed=0
 MIN_FILE_AGE_DAYS="${MIN_FILE_AGE_DAYS:-10}"  # Default to 10 days if not set
-TEMP_DIR="${TEMP_DIR:-/tmp}"
+TEMP_DIR="${TEMP_DIR:-${SOURCE_DIR}/tmp}"
 MAX_BANDWIDTH="${MAX_BANDWIDTH:-2Mb/s}"
+
+# Create temp directory if it doesn't exist
+mkdir -p "$TEMP_DIR"
+log "📁 Temp directory: $TEMP_DIR"
 
 # Find all files, sort by creation time (oldest first), and upload one by one
 while IFS= read -r file_path; do
@@ -188,3 +192,8 @@ while IFS= read -r file_path; do
         upload_failed=1
     fi
 done < <(find "$SOURCE_DIR" -type f -printf '%T@ %p\n' | sort -n | cut -d' ' -f2-)
+
+# Delete empty directories after all files are processed
+log "🧹 Cleaning up empty directories..."
+find "$SOURCE_DIR" -type d -empty -delete
+log "✅ Empty directories cleaned up."
